@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Limit Order Book - Trading Interface</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <h1>Limit Order Book Trading System</h1>
+            <div class="connection-status">
+                <span id="connectionStatus" class="status-disconnected">Disconnected</span>
+            </div>
+        </header>
+
+        <!-- Main Trading Interface -->
+        <div class="trading-interface">
+            <!-- Left Panel: Order Book -->
+            <div class="left-panel">
+                <div class="order-book-section">
+                    <h2>Order Book</h2>
+                    <div class="symbol-selector">
+                        <label for="symbolSelect">Symbol:</label>
+                        <select id="symbolSelect">
+                            <option value="AAPL">AAPL</option>
+                            <option value="GOOGL">GOOGL</option>
+                            <option value="MSFT">MSFT</option>
+                            <option value="TSLA">TSLA</option>
+                        </select>
+                    </div>
+                    
+                    <div class="market-data">
+                        <div class="price-display">
+                            <div class="bid-ask">
+                                <div class="bid">
+                                    <span class="label">Best Bid:</span>
+                                    <span id="bestBid" class="price">--</span>
+                                    <span id="bidSize" class="size">(--)</span>
+                                </div>
+                                <div class="ask">
+                                    <span class="label">Best Ask:</span>
+                                    <span id="bestAsk" class="price">--</span>
+                                    <span id="askSize" class="size">(--)</span>
+                                </div>
+                            </div>
+                            <div class="spread">
+                                <span class="label">Spread:</span>
+                                <span id="spread" class="price">--</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="order-book-table">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Price</th>
+                                    <th>Size</th>
+                                    <th>Total</th>
+                                </tr>
+                            </thead>
+                            <tbody id="orderBookBody">
+                                <!-- Order book data will be populated here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Center Panel: Trading Controls -->
+            <div class="center-panel">
+                <div class="trading-section">
+                    <h2>Place Order</h2>
+                    <form id="orderForm" class="order-form">
+                        <div class="form-group">
+                            <label for="orderType">Order Type:</label>
+                            <select id="orderType" required>
+                                <option value="BUY">Buy</option>
+                                <option value="SELL">Sell</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="orderPrice">Price:</label>
+                            <input type="number" id="orderPrice" step="0.01" min="0" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="orderQuantity">Quantity:</label>
+                            <input type="number" id="orderQuantity" min="1" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="clientId">Client ID:</label>
+                            <input type="text" id="clientId" value="WEB_CLIENT" required>
+                        </div>
+                        
+                        <button type="submit" class="submit-btn">Submit Order</button>
+                    </form>
+                </div>
+
+                <div class="active-orders-section">
+                    <h2>Active Orders</h2>
+                    <div class="active-orders" id="activeOrders">
+                        <!-- Active orders will be displayed here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Panel: Charts and Statistics -->
+            <div class="right-panel">
+                <div class="chart-section">
+                    <h2>Candlestick Chart</h2>
+                    <div class="chart-controls">
+                        <select id="timeframeSelect" class="timeframe-select">
+                            <option value="1m">1m</option>
+                            <option value="5m">5m</option>
+                            <option value="15m">15m</option>
+                            <option value="1h">1h</option>
+                            <option value="1d">1d</option>
+                        </select>
+                    </div>
+                    <div id="candlestickChart" class="candlestick-chart"></div>
+                </div>
+
+                <div class="statistics-section">
+                    <h2>Statistics</h2>
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <span class="stat-label">Total Trades:</span>
+                            <span id="totalTrades" class="stat-value">0</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Total Volume:</span>
+                            <span id="totalVolume" class="stat-value">0</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Last Trade:</span>
+                            <span id="lastTrade" class="stat-value">--</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Avg Trade Size:</span>
+                            <span id="avgTradeSize" class="stat-value">0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="recent-trades-section">
+                    <h2>Recent Trades</h2>
+                    <div class="recent-trades" id="recentTrades">
+                        <!-- Recent trades will be displayed here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Control Panel - Hidden for cleaner look -->
+        <div class="control-panel" style="display: none;">
+            <button id="startSimulation" class="control-btn">Start Market Simulation</button>
+            <button id="stopSimulation" class="control-btn">Stop Simulation</button>
+            <button id="loadSampleData" class="control-btn">Load Sample Data</button>
+            <button id="clearOrders" class="control-btn">Clear All Orders</button>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <div id="orderModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Order Details</h2>
+            <div id="orderDetails"></div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
